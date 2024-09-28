@@ -122,6 +122,12 @@ code {
   background-color: rgba(255, 255, 255, 0.9);
 }
 
+.task.completed,
+.quadrant.notUrgentNotImportant .task {
+  background-color: rgba(200, 200, 200, 0.5);
+  color: #666;
+}
+
 .task.completed:hover,
 .quadrant.notUrgentNotImportant .task:hover {
   background-color: rgba(200, 200, 200, 0.7);

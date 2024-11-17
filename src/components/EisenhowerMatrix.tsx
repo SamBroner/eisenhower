@@ -33,11 +33,33 @@ const EisenhowerMatrix: React.FC<Props> = ({ tasks, onUpdateTask, onDeleteTask }
     e.preventDefault();
     const taskId = e.dataTransfer.getData('taskId');
     const targetElement = e.target as HTMLElement;
-    const targetTask = targetElement.closest('.task') as HTMLElement;
+    
+    const targetTask = targetElement.closest('.task');
+    const targetQuadrant = targetElement.closest('.quadrant');
     
     if (targetTask && targetTask.id !== taskId) {
       onUpdateTask(taskId, quadrant, targetTask.id);
-    } else {
+    } else if (targetQuadrant) {
+      const quadrantRect = targetQuadrant.getBoundingClientRect();
+      const dropY = e.clientY;
+      
+      const taskElements = Array.from(targetQuadrant.querySelectorAll('.task'));
+      
+      if (taskElements.length === 0) {
+        onUpdateTask(taskId, quadrant);
+        return;
+      }
+      
+      for (let i = 0; i < taskElements.length; i++) {
+        const taskRect = taskElements[i].getBoundingClientRect();
+        const taskMiddle = taskRect.top + taskRect.height / 2;
+        
+        if (dropY < taskMiddle) {
+          onUpdateTask(taskId, quadrant, taskElements[i].id);
+          return;
+        }
+      }
+      
       onUpdateTask(taskId, quadrant);
     }
   };

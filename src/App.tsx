@@ -57,17 +57,40 @@ function App() {
     });
   };
 
-  const updateTaskQuadrant = (taskId: string, newQuadrant: Task['quadrant'], targetTaskId?: string) => {
+  const updateTaskQuadrant = (taskId: string, newQuadrant: Task['quadrant'], targetTaskId?: string, dropPosition?: 'above' | 'below') => {
     setTasks(prevTasks => {
       const taskToMove = prevTasks.find(t => t.id === taskId)!;
       const updatedTasks = prevTasks.filter(t => t.id !== taskId);
       
       if (targetTaskId) {
+        // When dropping onto another task
         const targetIndex = updatedTasks.findIndex(t => t.id === targetTaskId);
-        updatedTasks.splice(targetIndex, 0, { ...taskToMove, quadrant: newQuadrant });
+        const targetTask = updatedTasks[targetIndex];
+        
+        // If same quadrant, respect the original order
+        if (taskToMove.quadrant === targetTask.quadrant) {
+          const originalIndex = prevTasks.findIndex(t => t.id === taskId);
+          const targetOriginalIndex = prevTasks.findIndex(t => t.id === targetTaskId);
+          const shouldGoBelow = originalIndex < targetOriginalIndex;
+          updatedTasks.splice(targetIndex + (shouldGoBelow ? 1 : 0), 0, taskToMove);
+        } else {
+          // For different quadrants, always insert above target
+          updatedTasks.splice(targetIndex, 0, { ...taskToMove, quadrant: newQuadrant });
+        }
       } else {
-        const lastIndexInQuadrant = updatedTasks.filter(t => t.quadrant === newQuadrant).length;
-        updatedTasks.splice(lastIndexInQuadrant, 0, { ...taskToMove, quadrant: newQuadrant });
+        // When dropping directly into a quadrant
+        const tasksInQuadrant = updatedTasks.filter(t => t.quadrant === newQuadrant);
+        if (tasksInQuadrant.length === 0) {
+          // If quadrant is empty, just add the task
+          updatedTasks.push({ ...taskToMove, quadrant: newQuadrant });
+        } else {
+          // Insert at the specified position (default to end if not specified)
+          const insertIndex = dropPosition === 'above' ? 
+            updatedTasks.findIndex(t => t.quadrant === newQuadrant) :
+            updatedTasks.findIndex(t => t.id === tasksInQuadrant[tasksInQuadrant.length - 1].id) + 1;
+          
+          updatedTasks.splice(insertIndex, 0, { ...taskToMove, quadrant: newQuadrant });
+        }
       }
 
       return updatedTasks.map((task, index) => ({ ...task, order: index }));

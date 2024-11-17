@@ -40,7 +40,6 @@ const EisenhowerMatrix: React.FC<Props> = ({ tasks, onUpdateTask, onDeleteTask }
     if (targetTask && targetTask.id !== taskId) {
       onUpdateTask(taskId, quadrant, targetTask.id);
     } else if (targetQuadrant) {
-      const quadrantRect = targetQuadrant.getBoundingClientRect();
       const dropY = e.clientY;
       
       const taskElements = Array.from(targetQuadrant.querySelectorAll('.task'));

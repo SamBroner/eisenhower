@@ -11,6 +11,8 @@ export interface Task {
   quadrant: 'todoList' | 'urgentImportant' | 'importantNotUrgent' | 'urgentNotImportant' | 'notUrgentNotImportant' | 'deleted';
   order: number;
   originalQuadrant?: Task['quadrant'];
+  completed?: boolean;
+  delegatedTo?: string;
 }
 
 function App() {
@@ -23,14 +25,16 @@ function App() {
     localStorage.setItem('tasks', JSON.stringify(tasks));
   }, [tasks]);
 
-  const addTask = (text: string) => {
-    const newTask: Task = {
-      id: Date.now().toString(),
-      text,
-      quadrant: 'todoList',
-      order: tasks.length,
-    };
-    setTasks([...tasks, newTask]);
+  const addTasks = (texts: string[]) => {
+    setTasks(prevTasks => {
+      const newTasks = texts.map((text, index) => ({
+        id: (Date.now() + index).toString(),
+        text,
+        quadrant: 'todoList' as const,
+        order: prevTasks.length + index,
+      }));
+      return [...prevTasks, ...newTasks];
+    });
   };
 
   const updateTaskOrder = (taskId: string, targetTaskId?: string) => {
@@ -110,12 +114,98 @@ function App() {
     ));
   };
 
+  const handleTaskCompletion = (taskId: string) => {
+    setTasks(prevTasks => prevTasks.map(task => 
+      task.id === taskId 
+        ? { ...task, completed: !task.completed }
+        : task
+    ));
+  };
+
+  const handleTaskDelegation = (taskId: string, delegateTo: string) => {
+    setTasks(prevTasks => prevTasks.map(task => 
+      task.id === taskId 
+        ? { ...task, delegatedTo: delegateTo }
+        : task
+    ));
+  };
+
+  const exportTasks = () => {
+    const quadrantNames = {
+      urgentImportant: 'Do',
+      importantNotUrgent: 'Schedule',
+      urgentNotImportant: 'Delegate',
+      notUrgentNotImportant: 'Delete',
+      todoList: 'Uncategorized'
+    };
+
+    const formattedTasks = Object.entries(quadrantNames)
+      .map(([quadrant, title]) => {
+        const quadrantTasks = tasks
+          .filter(task => task.quadrant === quadrant)
+          .sort((a, b) => a.order - b.order);
+
+        if (quadrantTasks.length === 0) return '';
+
+        const taskList = quadrantTasks
+          .map(task => {
+            const isCompleted = quadrant === 'urgentImportant' && task.completed;
+            return `- [${isCompleted ? 'x' : ' '}] ${task.text}`;
+          })
+          .join('\n');
+
+        return `**${title}**\n${taskList}\n`;
+      })
+      .filter(section => section !== '')
+      .join('\n');
+
+    navigator.clipboard.writeText(formattedTasks).then(() => {
+      const exportButton = document.getElementById('export-button');
+      if (exportButton) {
+        exportButton.textContent = 'Copied!';
+        setTimeout(() => {
+          exportButton.textContent = 'Export';
+        }, 2000);
+      }
+    });
+  };
+
   return (
     <div className="App">
-      <h1>Eisenhower Matrix</h1>
-      <TaskInput onAddTask={addTask} />
+      <div className="title-container">
+        <h1>Eisenhower Matrix</h1>
+        <div className="tooltip-container">
+          <span className="info-icon">ⓘ</span>
+          <div className="tooltip-content">
+            <h3>What is an Eisenhower Matrix?</h3>
+            <p>The <a href="https://www.eisenhower.me/eisenhower-matrix/">Eisenhower Matrix</a> is a productivity tool that helps you organize tasks based on their urgency and importance. Tasks are categorized into four quadrants:</p>
+            <ul>
+              <li><strong>Do:</strong> Urgent & Important</li>
+              <li><strong>Schedule:</strong> Important but Not Urgent</li>
+              <li><strong>Delegate:</strong> Urgent but Not Important</li>
+              <li><strong>Delete:</strong> Neither Urgent nor Important</li>
+            </ul>
+
+            <h3>How to Use This Tool</h3>
+            <ul>
+              <li>Enter tasks in the input box</li>
+              <li>Supports lists with bullet points (-, *), checkboxes ([x]), and numbers (1., 2.)</li>
+              <li>Drag tasks between quadrants to organize</li>
+              <li>Tasks are automatically saved to your browser</li>
+              <li>Export to clipboard in markdown format</li>
+            </ul>
+
+            <h3>Built by Sam Broner</h3>
+            <p>Blog post <a href="https://sambroner.com/posts/the-agency-gap">here</a> and github <a href="https://github.com/SamBroner/eisenhower">here</a></p>
+          </div>
+        </div>
+      </div>
+      <TaskInput 
+        onAddTasks={addTasks} 
+      />
       <div className="button-container">
         <button onClick={clearTasks}>Clear Tasks</button>
+        <button id="export-button" onClick={exportTasks}>Export</button>
       </div>
       <div className="main-container">
         <TodoList 
@@ -127,6 +217,8 @@ function App() {
           tasks={tasks.filter(task => task.quadrant !== 'todoList' && task.quadrant !== 'deleted')} 
           onUpdateTask={updateTaskQuadrant} 
           onDeleteTask={deleteTask}
+          onTaskCompletion={handleTaskCompletion}
+          onTaskDelegation={handleTaskDelegation}
         />
         <RemovedTasks
           tasks={tasks.filter(task => task.quadrant === 'deleted')}

@@ -8,24 +8,24 @@ const TaskInput: React.FC<Props> = ({ onAddTasks }) => {
   const [taskText, setTaskText] = useState('');
 
   const parseTaskInput = (input: string): string[] => {
-
-    // Normalize line endings and remove any checkbox markers
-    input = input
-      .replace(/\r\n/g, '\n') // Convert Windows line endings
-      .replace(/\r/g, '\n')   // Convert old Mac line endings
-      .replace(/- \[(x| )?\]/g, '-');
-
-    // Split the input into lines and process each line
+    // Normalize line endings
+    input = input.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  
+    // Split the input into lines
     const lines = input.split('\n');
-
+  
     return lines
       .map(line => {
-        // Remove numbers (1., 2., etc) or bullet points (-, *) from the start
-        return line.replace(/^\s*(?:\d+\.|[-*])\s*/, '').trim();
+        // Remove various list formats:
+        // - Numbers (1., 2., etc)
+        // - Bullet points (-, *)
+        // - Checkbox formats: "- [ ]", "[ ]", "- [x]", "- [ x]"
+        return line
+          .replace(/^\s*(?:\d+\.|\-\s*\[[ x]?\]|\[[ x]?\]|\-)\s*/i, '')
+          .trim();
       })
       .filter(line => line.length > 0); // Remove empty lines
   };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (taskText.trim()) {

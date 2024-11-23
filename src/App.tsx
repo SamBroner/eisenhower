@@ -197,6 +197,7 @@ function App() {
 
             <h3>Built by Sam Broner</h3>
             <p>Blog post <a href="https://sambroner.com/posts/the-agency-gap">here</a> and github <a href="https://github.com/SamBroner/eisenhower">here</a></p>
+            <p><i>Note: Your data is private. All data is stored locally in your browser. There is no reporting or tracking of any kind on this subdomain. I cannot see your data.</i></p>
           </div>
         </div>
       </div>

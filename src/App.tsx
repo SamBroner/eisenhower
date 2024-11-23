@@ -135,7 +135,8 @@ function App() {
       urgentImportant: 'Do',
       importantNotUrgent: 'Schedule',
       urgentNotImportant: 'Delegate',
-      notUrgentNotImportant: 'Delete'
+      notUrgentNotImportant: 'Delete',
+      todoList: 'Uncategorized'
     };
 
     const formattedTasks = Object.entries(quadrantNames)

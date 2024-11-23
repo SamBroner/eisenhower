@@ -114,7 +114,33 @@ function App() {
 
   return (
     <div className="App">
-      <h1>Eisenhower Matrix</h1>
+      <div className="title-container">
+        <h1>Eisenhower Matrix</h1>
+        <div className="tooltip-container">
+          <span className="info-icon">ⓘ</span>
+          <div className="tooltip-content">
+            <h3>What is an Eisenhower Matrix?</h3>
+            <p>The <a href="https://www.eisenhower.me/eisenhower-matrix/">Eisenhower Matrix</a> is a productivity tool that helps you organize tasks based on their urgency and importance. Tasks are categorized into four quadrants:</p>
+            <ul>
+              <li><strong>Do:</strong> Urgent & Important</li>
+              <li><strong>Schedule:</strong> Important but Not Urgent</li>
+              <li><strong>Delegate:</strong> Urgent but Not Important</li>
+              <li><strong>Delete:</strong> Neither Urgent nor Important</li>
+            </ul>
+            
+            <h3>How to Use This Tool</h3>
+            <ul>
+              <li>Enter tasks in the input box</li>
+              <li>Supports lists with bullet points (-, *, - [ ]) and numbers (1., 2.)</li>
+              <li>Drag tasks between quadrants to organize</li>
+              <li>Tasks are automatically saved to your browser</li>
+            </ul>
+
+            <h3>Built by Sam Broner</h3>
+            <p>Blog post <a href="https://sambroner.com/posts/the-agency-gap">here</a> and github <a href="https://github.com/SamBroner/eisenhower">here</a></p>
+          </div>
+        </div>
+      </div>
       <TaskInput 
         onAddTasks={addTasks} 
       />

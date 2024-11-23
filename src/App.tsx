@@ -23,14 +23,16 @@ function App() {
     localStorage.setItem('tasks', JSON.stringify(tasks));
   }, [tasks]);
 
-  const addTask = (text: string) => {
-    const newTask: Task = {
-      id: Date.now().toString(),
-      text,
-      quadrant: 'todoList',
-      order: tasks.length,
-    };
-    setTasks([...tasks, newTask]);
+  const addTasks = (texts: string[]) => {
+    setTasks(prevTasks => {
+      const newTasks = texts.map((text, index) => ({
+        id: (Date.now() + index).toString(),
+        text,
+        quadrant: 'todoList' as const,
+        order: prevTasks.length + index,
+      }));
+      return [...prevTasks, ...newTasks];
+    });
   };
 
   const updateTaskOrder = (taskId: string, targetTaskId?: string) => {
@@ -113,7 +115,9 @@ function App() {
   return (
     <div className="App">
       <h1>Eisenhower Matrix</h1>
-      <TaskInput onAddTask={addTask} />
+      <TaskInput 
+        onAddTasks={addTasks} 
+      />
       <div className="button-container">
         <button onClick={clearTasks}>Clear Tasks</button>
       </div>

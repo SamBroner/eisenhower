@@ -5,12 +5,11 @@ interface Props {
   tasks: Task[];
   onUpdateTask: (taskId: string, newQuadrant: Task['quadrant'], targetTaskId?: string) => void;
   onDeleteTask: (taskId: string) => void;
+  onTaskCompletion: (taskId: string) => void;
+  onTaskDelegation: (taskId: string, delegateTo: string) => void;
 }
 
-const EisenhowerMatrix: React.FC<Props> = ({ tasks, onUpdateTask, onDeleteTask }) => {
-  const [delegations, setDelegations] = useState<{[key: string]: string}>({});
-  const [completedTasks, setCompletedTasks] = useState<{[key: string]: boolean}>({});
-
+const EisenhowerMatrix: React.FC<Props> = ({ tasks, onUpdateTask, onDeleteTask, onTaskCompletion, onTaskDelegation }) => {
   const quadrants: Array<{
     id: Task['quadrant'],
     action: string
@@ -63,18 +62,14 @@ const EisenhowerMatrix: React.FC<Props> = ({ tasks, onUpdateTask, onDeleteTask }
     }
   };
 
-  const handleCheckboxChange = (taskId: string) => {
-    setCompletedTasks(prev => ({...prev, [taskId]: !prev[taskId]}));
-  };
-
   const handleDelegationChange = (taskId: string, delegateTo: string) => {
-    setDelegations({...delegations, [taskId]: delegateTo});
+    onTaskDelegation(taskId, delegateTo);
   };
 
   const sortTasks = (tasks: Task[]) => {
     return tasks.sort((a, b) => {
-      if (completedTasks[a.id] && !completedTasks[b.id]) return 1;
-      if (!completedTasks[a.id] && completedTasks[b.id]) return -1;
+      if (a.completed && !b.completed) return 1;
+      if (!a.completed && b.completed) return -1;
       return a.order - b.order;
     });
   };
@@ -100,7 +95,7 @@ const EisenhowerMatrix: React.FC<Props> = ({ tasks, onUpdateTask, onDeleteTask }
                   <div
                     key={task.id}
                     id={task.id}
-                    className={`task ${completedTasks[task.id] || quadrant.id === 'notUrgentNotImportant' ? 'completed' : ''}`}
+                    className={`task ${task.completed || quadrant.id === 'notUrgentNotImportant' ? 'completed' : ''}`}
                     draggable
                     onDragStart={(e) => handleDragStart(e, task.id)}
                   >
@@ -111,8 +106,8 @@ const EisenhowerMatrix: React.FC<Props> = ({ tasks, onUpdateTask, onDeleteTask }
                       <div className="checkbox-container">
                         <input
                           type="checkbox"
-                          checked={completedTasks[task.id] || false}
-                          onChange={() => handleCheckboxChange(task.id)}
+                          checked={task.completed || false}
+                          onChange={() => onTaskCompletion(task.id)}
                           className="task-checkbox"
                         />
                       </div>
@@ -123,7 +118,7 @@ const EisenhowerMatrix: React.FC<Props> = ({ tasks, onUpdateTask, onDeleteTask }
                         <input
                           type="text"
                           placeholder="Delegate to"
-                          value={delegations[task.id] || ''}
+                          value={task.delegatedTo || ''}
                           onChange={(e) => handleDelegationChange(task.id, e.target.value)}
                           className="task-delegation"
                         />

@@ -217,6 +217,63 @@ code {
   cursor: pointer;
 }
 
+.current-task-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, rgba(46, 125, 50, 0.12), rgba(21, 101, 192, 0.12));
+  border: 1px solid rgba(46, 125, 50, 0.2);
+}
+
+.current-task-banner__label {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #2e7d32;
+  white-space: nowrap;
+}
+
+.current-task-banner__text {
+  flex: 1;
+  font-size: 0.95rem;
+  color: #0d1f2d;
+  text-align: left;
+  word-break: break-word;
+}
+
+.current-task-banner__complete-button {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  background-color: #2e7d32;
+  color: #ffffff;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.current-task-banner__complete-button:hover {
+  background-color: #256427;
+}
+
+@media (max-width: 600px) {
+  .current-task-banner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .current-task-banner__label {
+    text-align: left;
+  }
+
+  .current-task-banner__complete-button {
+    width: 100%;
+  }
+}
+
 /* Todo List and Removed Tasks */
 .todo-list,
 .removed-tasks {

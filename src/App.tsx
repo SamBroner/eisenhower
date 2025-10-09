@@ -170,6 +170,10 @@ function App() {
     });
   };
 
+  const currentUrgentImportantTask = tasks
+    .filter(task => task.quadrant === 'urgentImportant' && !task.completed)
+    .sort((a, b) => a.order - b.order)[0] ?? null;
+
   return (
     <div className="App">
       <div className="title-container">
@@ -191,7 +195,7 @@ function App() {
               <li>Enter tasks in the input box</li>
               <li>Supports lists with bullet points (-, *), checkboxes ([x]), and numbers (1., 2.)</li>
               <li>Drag tasks between quadrants to organize</li>
-              <li>Tasks are automatically saved to your browser</li>
+              <li>Tasks are saved to your browser (but could be lost)</li>
               <li>Export to clipboard in markdown format</li>
             </ul>
 
@@ -208,6 +212,19 @@ function App() {
         <button onClick={clearTasks}>Clear Tasks</button>
         <button id="export-button" onClick={exportTasks}>Export</button>
       </div>
+      {currentUrgentImportantTask && (
+        <div className="current-task-banner">
+          <div className="current-task-banner__label">Current Focus</div>
+          <div className="current-task-banner__text">{currentUrgentImportantTask.text}</div>
+          <button
+            type="button"
+            className="current-task-banner__complete-button"
+            onClick={() => handleTaskCompletion(currentUrgentImportantTask.id)}
+          >
+            Mark Complete
+          </button>
+        </div>
+      )}
       <div className="main-container">
         <TodoList 
           tasks={tasks.filter(task => task.quadrant === 'todoList')} 

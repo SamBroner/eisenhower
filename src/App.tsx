@@ -20,6 +20,8 @@ function App() {
     const savedTasks = localStorage.getItem('tasks');
     return savedTasks ? JSON.parse(savedTasks) : [];
   });
+  const [isRemovedCollapsed, setIsRemovedCollapsed] = useState(true);
+  const [isFocusMode, setIsFocusMode] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('tasks', JSON.stringify(tasks));
@@ -130,6 +132,16 @@ function App() {
     ));
   };
 
+  const currentUrgentImportantTask = tasks
+    .filter(task => task.quadrant === 'urgentImportant' && !task.completed)
+    .sort((a, b) => a.order - b.order)[0] ?? null;
+
+  useEffect(() => {
+    if (!currentUrgentImportantTask && isFocusMode) {
+      setIsFocusMode(false);
+    }
+  }, [currentUrgentImportantTask, isFocusMode]);
+
   const exportTasks = () => {
     const quadrantNames = {
       urgentImportant: 'Do',
@@ -170,13 +182,9 @@ function App() {
     });
   };
 
-  const currentUrgentImportantTask = tasks
-    .filter(task => task.quadrant === 'urgentImportant' && !task.completed)
-    .sort((a, b) => a.order - b.order)[0] ?? null;
-
   return (
-    <div className="App">
-      <div className="title-container">
+    <div className={`App ${isFocusMode ? 'focus-mode' : ''}`}>
+      <div className="title-container focus-exempt">
         <h1>Eisenhower Matrix</h1>
         <div className="tooltip-container">
           <span className="info-icon">ⓘ</span>
@@ -213,35 +221,51 @@ function App() {
         <button id="export-button" onClick={exportTasks}>Export</button>
       </div>
       {currentUrgentImportantTask && (
-        <div className="current-task-banner">
+        <div className="current-task-banner focus-exempt">
           <div className="current-task-banner__label">Current Focus</div>
           <div className="current-task-banner__text">{currentUrgentImportantTask.text}</div>
-          <button
-            type="button"
-            className="current-task-banner__complete-button"
-            onClick={() => handleTaskCompletion(currentUrgentImportantTask.id)}
-          >
-            Mark Complete
-          </button>
+          <div className="current-task-banner__actions">
+            <label className="focus-toggle">
+              <input
+                type="checkbox"
+                checked={isFocusMode}
+                onChange={() => setIsFocusMode(prev => !prev)}
+              />
+              <span className="focus-toggle__track">
+                <span className="focus-toggle__thumb" />
+              </span>
+              <span className="focus-toggle__label">Focus Mode</span>
+            </label>
+            <button
+              type="button"
+              className="current-task-banner__complete-button"
+              onClick={() => handleTaskCompletion(currentUrgentImportantTask.id)}
+            >
+              Mark Complete
+            </button>
+          </div>
         </div>
       )}
       <div className="main-container">
-        <TodoList 
-          tasks={tasks.filter(task => task.quadrant === 'todoList')} 
-          onUpdateTask={updateTaskOrder}
-          onDeleteTask={deleteTask}
-        />
+        <div className="side-column">
+          <TodoList 
+            tasks={tasks.filter(task => task.quadrant === 'todoList')} 
+            onUpdateTask={updateTaskOrder}
+            onDeleteTask={deleteTask}
+          />
+          <RemovedTasks
+            tasks={tasks.filter(task => task.quadrant === 'deleted')}
+            onRestoreTask={restoreTask}
+            isCollapsed={isRemovedCollapsed}
+            onToggleCollapse={() => setIsRemovedCollapsed(prev => !prev)}
+          />
+        </div>
         <EisenhowerMatrix 
           tasks={tasks.filter(task => task.quadrant !== 'todoList' && task.quadrant !== 'deleted')} 
           onUpdateTask={updateTaskQuadrant} 
           onDeleteTask={deleteTask}
           onTaskCompletion={handleTaskCompletion}
           onTaskDelegation={handleTaskDelegation}
-        />
-        <RemovedTasks
-          tasks={tasks.filter(task => task.quadrant === 'deleted')}
-          onRestoreTask={restoreTask}
-          onUpdateTask={updateTaskQuadrant}
         />
       </div>
     </div>

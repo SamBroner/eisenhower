@@ -29,25 +29,34 @@ const TodoList: React.FC<Props> = ({ tasks, onUpdateTask, onDeleteTask }) => {
     }
   };
 
+  const sortedTasks = [...tasks].sort((a, b) => a.order - b.order);
+
   return (
     <div className="todo-list" onDragOver={handleDragOver} onDrop={handleDrop}>
-      <h2>To-Do List</h2>
-      {tasks
-        .sort((a, b) => a.order - b.order)
-        .map(task => (
-          <div
-            key={task.id}
-            id={task.id}
-            className="task"
-            draggable
-            onDragStart={(e) => handleDragStart(e, task.id)}
-          >
-            <span className="task-text">{task.text}</span>
-            <button onClick={() => onDeleteTask(task.id)} className="delete-button">
-              &times;
-            </button>
-          </div>
-        ))}
+      <div className="panel-header">
+        <h2>To-Do List</h2>
+        <span className="panel-count">{sortedTasks.length}</span>
+      </div>
+      <div className="panel-content">
+        {sortedTasks.length === 0 ? (
+          <div className="empty-state">No tasks yet</div>
+        ) : (
+          sortedTasks.map(task => (
+            <div
+              key={task.id}
+              id={task.id}
+              className="task"
+              draggable
+              onDragStart={(e) => handleDragStart(e, task.id)}
+            >
+              <span className="task-text">{task.text}</span>
+              <button onClick={() => onDeleteTask(task.id)} className="delete-button">
+                &times;
+              </button>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 };

@@ -21,38 +21,6 @@ code {
   padding: 20px;
 }
 
-.top-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 24px;
-  flex-wrap: wrap;
-  margin-bottom: 24px;
-}
-
-.top-header .current-task-banner {
-  flex: 1 1 320px;
-  min-width: 260px;
-}
-
-.top-header .title-container {
-  flex: 0 1 auto;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-@media (max-width: 720px) {
-  .top-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 16px;
-  }
-
-  .top-header .title-container {
-    margin: 0;
-  }
-}
-
 .main-container {
   display: grid;
   grid-template-columns: clamp(180px, 23vw, 240px) minmax(0, 1fr);
@@ -291,6 +259,7 @@ code {
   gap: 14px;
   flex-wrap: wrap;
   justify-content: flex-end;
+  margin-left: 12px;
 }
 
 .focus-toggle {
@@ -356,6 +325,93 @@ code {
   background-color: #256427;
 }
 
+.focus-timer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.focus-timer__ring {
+  position: relative;
+  width: 68px;
+  height: 68px;
+  flex-shrink: 0;
+}
+
+.focus-timer__ring svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.focus-timer__ring-bg,
+.focus-timer__ring-progress {
+  fill: none;
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 339.292;
+}
+
+.focus-timer__ring-bg {
+  stroke: rgba(21, 101, 192, 0.18);
+}
+
+.focus-timer__ring-progress {
+  stroke: #1565c0;
+  transition: stroke-dashoffset 0.6s ease;
+}
+
+.focus-timer__time {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0d1f2d;
+}
+
+.focus-timer__controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.focus-timer__button {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #1565c0, #2e7d32);
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.focus-timer__button--ghost {
+  background: rgba(21, 101, 192, 0.12);
+  color: #1565c0;
+  border: 1px solid rgba(21, 101, 192, 0.2);
+}
+
+.focus-timer__button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(21, 101, 192, 0.18);
+}
+
+.focus-timer__button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  transform: none;
+  box-shadow: none;
+}
+
+.focus-timer__button--ghost:hover:not(:disabled) {
+  background: rgba(21, 101, 192, 0.18);
+}
+
 @media (max-width: 600px) {
   .current-task-banner {
     flex-direction: column;
@@ -374,10 +430,22 @@ code {
 
   .current-task-banner__actions {
     justify-content: space-between;
+    margin-left: 0;
+    width: 100%;
   }
 
   .current-task-banner__complete-button {
     width: 100%;
+  }
+
+  .focus-timer {
+    width: 100%;
+    justify-content: space-between;
+    margin-left: 0;
+  }
+
+  .focus-timer__controls {
+    flex-direction: row;
   }
 }
 

@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
 import EisenhowerMatrix from './components/EisenhowerMatrix';
 import TodoList from './components/TodoList';
 import TaskInput from './components/TaskInput';
 import RemovedTasks from './components/DeletedTasks';
+import FocusTimer, { FocusTimerSnapshot } from './components/FocusTimer';
+
+const FOCUS_DURATION_SECONDS = 25 * 60;
 
 export interface Task {
   id: string;
@@ -15,6 +18,12 @@ export interface Task {
   delegatedTo?: string;
 }
 
+const DEFAULT_TIMER_SNAPSHOT: FocusTimerSnapshot = {
+  remainingSeconds: FOCUS_DURATION_SECONDS,
+  isManuallyPaused: false,
+  taskId: undefined,
+};
+
 function App() {
   const [tasks, setTasks] = useState<Task[]>(() => {
     const savedTasks = localStorage.getItem('tasks');
@@ -22,6 +31,10 @@ function App() {
   });
   const [isRemovedCollapsed, setIsRemovedCollapsed] = useState(true);
   const [isFocusMode, setIsFocusMode] = useState(false);
+  const [focusTimerSnapshot, setFocusTimerSnapshot] = useState<FocusTimerSnapshot>(
+    DEFAULT_TIMER_SNAPSHOT
+  );
+  const lastFocusTaskIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     localStorage.setItem('tasks', JSON.stringify(tasks));
@@ -137,6 +150,40 @@ function App() {
     .sort((a, b) => a.order - b.order)[0] ?? null;
 
   useEffect(() => {
+    const currentId = currentUrgentImportantTask?.id ?? null;
+    if (lastFocusTaskIdRef.current === currentId) {
+      return;
+    }
+
+    lastFocusTaskIdRef.current = currentId;
+    setFocusTimerSnapshot({
+      remainingSeconds: FOCUS_DURATION_SECONDS,
+      isManuallyPaused: false,
+      taskId: currentId ?? undefined,
+    });
+  }, [currentUrgentImportantTask]);
+
+  const handleTimerStateSnapshot = useCallback(
+    (snapshot: FocusTimerSnapshot) => {
+      if (
+        snapshot.taskId &&
+        currentUrgentImportantTask &&
+        snapshot.taskId !== currentUrgentImportantTask.id
+      ) {
+        return;
+      }
+
+      setFocusTimerSnapshot(prev =>
+        prev.remainingSeconds === snapshot.remainingSeconds &&
+        prev.isManuallyPaused === snapshot.isManuallyPaused
+          ? prev
+          : snapshot
+      );
+    },
+    [currentUrgentImportantTask]
+  );
+
+  useEffect(() => {
     if (!currentUrgentImportantTask && isFocusMode) {
       setIsFocusMode(false);
     }
@@ -224,6 +271,16 @@ function App() {
         <div className="current-task-banner focus-exempt">
           <div className="current-task-banner__label">Current Focus</div>
           <div className="current-task-banner__text">{currentUrgentImportantTask.text}</div>
+          {isFocusMode && (
+            <FocusTimer
+              key={currentUrgentImportantTask.id}
+              isActive={isFocusMode}
+              taskId={currentUrgentImportantTask.id}
+              durationSeconds={FOCUS_DURATION_SECONDS}
+              initialState={focusTimerSnapshot}
+              onStateSnapshot={handleTimerStateSnapshot}
+            />
+          )}
           <div className="current-task-banner__actions">
             <label className="focus-toggle">
               <input

@@ -191,6 +191,20 @@ function App() {
     }
   }, [currentUrgentImportantTask, isFocusMode]);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isFocusMode) {
+        event.preventDefault();
+        setIsFocusMode(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isFocusMode]);
+
   const exportTasks = () => {
     const quadrantNames = {
       urgentImportant: 'Do',

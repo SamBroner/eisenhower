@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
 import EisenhowerMatrix from './components/EisenhowerMatrix';
 import TodoList from './components/TodoList';
 import TaskInput from './components/TaskInput';
 import RemovedTasks from './components/DeletedTasks';
+import FocusTimer, { FocusTimerSnapshot } from './components/FocusTimer';
+
+const FOCUS_DURATION_SECONDS = 25 * 60;
 
 export interface Task {
   id: string;
@@ -15,11 +18,24 @@ export interface Task {
   delegatedTo?: string;
 }
 
+const createDefaultTimerSnapshot = (): FocusTimerSnapshot => ({
+  remainingSeconds: FOCUS_DURATION_SECONDS,
+  isManuallyPaused: false,
+  taskId: undefined,
+  referenceTimestamp: Date.now(),
+});
+
 function App() {
   const [tasks, setTasks] = useState<Task[]>(() => {
     const savedTasks = localStorage.getItem('tasks');
     return savedTasks ? JSON.parse(savedTasks) : [];
   });
+  const [isRemovedCollapsed, setIsRemovedCollapsed] = useState(true);
+  const [isFocusMode, setIsFocusMode] = useState(false);
+  const [focusTimerSnapshot, setFocusTimerSnapshot] = useState<FocusTimerSnapshot>(
+    createDefaultTimerSnapshot()
+  );
+  const lastFocusTaskIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     localStorage.setItem('tasks', JSON.stringify(tasks));
@@ -130,6 +146,51 @@ function App() {
     ));
   };
 
+  const currentUrgentImportantTask = tasks
+    .filter(task => task.quadrant === 'urgentImportant' && !task.completed)
+    .sort((a, b) => a.order - b.order)[0] ?? null;
+
+  useEffect(() => {
+    const currentId = currentUrgentImportantTask?.id ?? null;
+    if (lastFocusTaskIdRef.current === currentId) {
+      return;
+    }
+
+    lastFocusTaskIdRef.current = currentId;
+    setFocusTimerSnapshot({
+      remainingSeconds: FOCUS_DURATION_SECONDS,
+      isManuallyPaused: false,
+      taskId: currentId ?? undefined,
+      referenceTimestamp: Date.now(),
+    });
+  }, [currentUrgentImportantTask]);
+
+  const handleTimerStateSnapshot = useCallback(
+    (snapshot: FocusTimerSnapshot) => {
+      if (
+        snapshot.taskId &&
+        currentUrgentImportantTask &&
+        snapshot.taskId !== currentUrgentImportantTask.id
+      ) {
+        return;
+      }
+
+      setFocusTimerSnapshot(prev =>
+        prev.remainingSeconds === snapshot.remainingSeconds &&
+        prev.isManuallyPaused === snapshot.isManuallyPaused
+          ? prev
+          : snapshot
+      );
+    },
+    [currentUrgentImportantTask]
+  );
+
+  useEffect(() => {
+    if (!currentUrgentImportantTask && isFocusMode) {
+      setIsFocusMode(false);
+    }
+  }, [currentUrgentImportantTask, isFocusMode]);
+
   const exportTasks = () => {
     const quadrantNames = {
       urgentImportant: 'Do',
@@ -170,13 +231,9 @@ function App() {
     });
   };
 
-  const currentUrgentImportantTask = tasks
-    .filter(task => task.quadrant === 'urgentImportant' && !task.completed)
-    .sort((a, b) => a.order - b.order)[0] ?? null;
-
   return (
-    <div className="App">
-      <div className="title-container">
+    <div className={`App ${isFocusMode ? 'focus-mode' : ''}`}>
+      <div className="title-container focus-exempt">
         <h1>Eisenhower Matrix</h1>
         <div className="tooltip-container">
           <span className="info-icon">ⓘ</span>
@@ -213,35 +270,63 @@ function App() {
         <button id="export-button" onClick={exportTasks}>Export</button>
       </div>
       {currentUrgentImportantTask && (
-        <div className="current-task-banner">
-          <div className="current-task-banner__label">Current Focus</div>
-          <div className="current-task-banner__text">{currentUrgentImportantTask.text}</div>
-          <button
-            type="button"
-            className="current-task-banner__complete-button"
-            onClick={() => handleTaskCompletion(currentUrgentImportantTask.id)}
-          >
-            Mark Complete
-          </button>
+        <div className={`current-focus-shell ${isFocusMode ? 'focus-mode-active' : ''}`}>
+          <div className="current-task-banner focus-exempt">
+            <div className="current-task-banner__label">Current Focus</div>
+            <div className="current-task-banner__text">{currentUrgentImportantTask.text}</div>
+            {isFocusMode && (
+              <FocusTimer
+                key={currentUrgentImportantTask.id}
+                isActive={isFocusMode}
+                taskId={currentUrgentImportantTask.id}
+                durationSeconds={FOCUS_DURATION_SECONDS}
+                initialState={focusTimerSnapshot}
+                onStateSnapshot={handleTimerStateSnapshot}
+              />
+            )}
+            <div className="current-task-banner__actions">
+              <label className="focus-toggle">
+                <input
+                  type="checkbox"
+                  checked={isFocusMode}
+                  onChange={() => setIsFocusMode(prev => !prev)}
+                />
+                <span className="focus-toggle__track">
+                  <span className="focus-toggle__thumb" />
+                </span>
+                <span className="focus-toggle__label">Focus Mode</span>
+              </label>
+              <button
+                type="button"
+                className="current-task-banner__complete-button"
+                onClick={() => handleTaskCompletion(currentUrgentImportantTask.id)}
+              >
+                Mark Complete
+              </button>
+            </div>
+          </div>
         </div>
       )}
       <div className="main-container">
-        <TodoList 
-          tasks={tasks.filter(task => task.quadrant === 'todoList')} 
-          onUpdateTask={updateTaskOrder}
-          onDeleteTask={deleteTask}
-        />
+        <div className="side-column">
+          <TodoList 
+            tasks={tasks.filter(task => task.quadrant === 'todoList')} 
+            onUpdateTask={updateTaskOrder}
+            onDeleteTask={deleteTask}
+          />
+          <RemovedTasks
+            tasks={tasks.filter(task => task.quadrant === 'deleted')}
+            onRestoreTask={restoreTask}
+            isCollapsed={isRemovedCollapsed}
+            onToggleCollapse={() => setIsRemovedCollapsed(prev => !prev)}
+          />
+        </div>
         <EisenhowerMatrix 
           tasks={tasks.filter(task => task.quadrant !== 'todoList' && task.quadrant !== 'deleted')} 
           onUpdateTask={updateTaskQuadrant} 
           onDeleteTask={deleteTask}
           onTaskCompletion={handleTaskCompletion}
           onTaskDelegation={handleTaskDelegation}
-        />
-        <RemovedTasks
-          tasks={tasks.filter(task => task.quadrant === 'deleted')}
-          onRestoreTask={restoreTask}
-          onUpdateTask={updateTaskQuadrant}
         />
       </div>
     </div>

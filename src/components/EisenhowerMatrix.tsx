@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Task } from '../App';
 
 interface Props {
@@ -9,7 +9,13 @@ interface Props {
   onTaskDelegation: (taskId: string, delegateTo: string) => void;
 }
 
-const EisenhowerMatrix: React.FC<Props> = ({ tasks, onUpdateTask, onDeleteTask, onTaskCompletion, onTaskDelegation }) => {
+const EisenhowerMatrix: React.FC<Props> = ({
+  tasks,
+  onUpdateTask,
+  onDeleteTask,
+  onTaskCompletion,
+  onTaskDelegation,
+}) => {
   const quadrants: Array<{
     id: Task['quadrant'],
     action: string

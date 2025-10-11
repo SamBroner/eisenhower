@@ -18,11 +18,12 @@ export interface Task {
   delegatedTo?: string;
 }
 
-const DEFAULT_TIMER_SNAPSHOT: FocusTimerSnapshot = {
+const createDefaultTimerSnapshot = (): FocusTimerSnapshot => ({
   remainingSeconds: FOCUS_DURATION_SECONDS,
   isManuallyPaused: false,
   taskId: undefined,
-};
+  referenceTimestamp: Date.now(),
+});
 
 function App() {
   const [tasks, setTasks] = useState<Task[]>(() => {
@@ -32,7 +33,7 @@ function App() {
   const [isRemovedCollapsed, setIsRemovedCollapsed] = useState(true);
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [focusTimerSnapshot, setFocusTimerSnapshot] = useState<FocusTimerSnapshot>(
-    DEFAULT_TIMER_SNAPSHOT
+    createDefaultTimerSnapshot()
   );
   const lastFocusTaskIdRef = useRef<string | null>(null);
 
@@ -160,6 +161,7 @@ function App() {
       remainingSeconds: FOCUS_DURATION_SECONDS,
       isManuallyPaused: false,
       taskId: currentId ?? undefined,
+      referenceTimestamp: Date.now(),
     });
   }, [currentUrgentImportantTask]);
 
@@ -268,38 +270,40 @@ function App() {
         <button id="export-button" onClick={exportTasks}>Export</button>
       </div>
       {currentUrgentImportantTask && (
-        <div className="current-task-banner focus-exempt">
-          <div className="current-task-banner__label">Current Focus</div>
-          <div className="current-task-banner__text">{currentUrgentImportantTask.text}</div>
-          {isFocusMode && (
-            <FocusTimer
-              key={currentUrgentImportantTask.id}
-              isActive={isFocusMode}
-              taskId={currentUrgentImportantTask.id}
-              durationSeconds={FOCUS_DURATION_SECONDS}
-              initialState={focusTimerSnapshot}
-              onStateSnapshot={handleTimerStateSnapshot}
-            />
-          )}
-          <div className="current-task-banner__actions">
-            <label className="focus-toggle">
-              <input
-                type="checkbox"
-                checked={isFocusMode}
-                onChange={() => setIsFocusMode(prev => !prev)}
+        <div className={`current-focus-shell ${isFocusMode ? 'focus-mode-active' : ''}`}>
+          <div className="current-task-banner focus-exempt">
+            <div className="current-task-banner__label">Current Focus</div>
+            <div className="current-task-banner__text">{currentUrgentImportantTask.text}</div>
+            {isFocusMode && (
+              <FocusTimer
+                key={currentUrgentImportantTask.id}
+                isActive={isFocusMode}
+                taskId={currentUrgentImportantTask.id}
+                durationSeconds={FOCUS_DURATION_SECONDS}
+                initialState={focusTimerSnapshot}
+                onStateSnapshot={handleTimerStateSnapshot}
               />
-              <span className="focus-toggle__track">
-                <span className="focus-toggle__thumb" />
-              </span>
-              <span className="focus-toggle__label">Focus Mode</span>
-            </label>
-            <button
-              type="button"
-              className="current-task-banner__complete-button"
-              onClick={() => handleTaskCompletion(currentUrgentImportantTask.id)}
-            >
-              Mark Complete
-            </button>
+            )}
+            <div className="current-task-banner__actions">
+              <label className="focus-toggle">
+                <input
+                  type="checkbox"
+                  checked={isFocusMode}
+                  onChange={() => setIsFocusMode(prev => !prev)}
+                />
+                <span className="focus-toggle__track">
+                  <span className="focus-toggle__thumb" />
+                </span>
+                <span className="focus-toggle__label">Focus Mode</span>
+              </label>
+              <button
+                type="button"
+                className="current-task-banner__complete-button"
+                onClick={() => handleTaskCompletion(currentUrgentImportantTask.id)}
+              >
+                Mark Complete
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -412,6 +412,17 @@ code {
   background: rgba(21, 101, 192, 0.18);
 }
 
+.current-focus-shell {
+  position: relative;
+}
+
+.current-focus-shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
 @media (max-width: 600px) {
   .current-task-banner {
     flex-direction: column;
@@ -446,6 +457,111 @@ code {
 
   .focus-timer__controls {
     flex-direction: row;
+  }
+}
+
+@media (max-width: 840px) and (max-height: 390px) {
+  .focus-mode .current-focus-shell,
+  .focus-mode-active {
+    position: relative;
+    z-index: 30;
+  }
+
+  .focus-mode .current-focus-shell::before,
+  .focus-mode-active::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(248, 251, 255, 0.6);
+    backdrop-filter: blur(18px);
+    z-index: 1;
+  }
+
+  .focus-mode .current-task-banner,
+  .focus-mode-active .current-task-banner {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(92vw, 380px);
+    max-height: 92vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
+    padding: 30px 24px;
+    margin-bottom: 0;
+    z-index: 2;
+    background: linear-gradient(90deg, rgba(46, 125, 50, 0.2), rgba(21, 101, 192, 0.14));
+    border: 1px solid rgba(46, 125, 50, 0.18);
+    box-shadow: 0 24px 48px rgba(12, 32, 64, 0.28);
+  }
+
+  .focus-mode .current-task-banner::after,
+  .focus-mode-active .current-task-banner::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 8px;
+    border-radius: inherit;
+    background: rgba(255, 255, 255, 0.78);
+    z-index: -1;
+  }
+
+  .focus-mode .current-task-banner__text,
+  .focus-mode-active .current-task-banner__text {
+    text-align: center;
+    padding: 0;
+    font-size: 1.15rem;
+    line-height: 1.4;
+  }
+
+  .focus-mode .current-task-banner__actions,
+  .focus-mode-active .current-task-banner__actions {
+    justify-content: center;
+    width: 100%;
+    margin-left: 0;
+    gap: 12px;
+  }
+
+  .focus-mode .current-task-banner__label,
+  .focus-mode-active .current-task-banner__label {
+    text-align: center;
+    margin: 0;
+    color: #1b5e20;
+  }
+
+  .focus-mode .current-task-banner__complete-button,
+  .focus-mode-active .current-task-banner__complete-button {
+    width: auto;
+  }
+
+  .focus-mode .focus-timer,
+  .focus-mode-active .focus-timer {
+    margin: 0 auto;
+    justify-content: center;
+    gap: 18px;
+  }
+
+  .focus-mode .focus-timer__controls,
+  .focus-mode-active .focus-timer__controls {
+    flex-direction: row;
+    gap: 10px;
+  }
+
+  .focus-mode .focus-timer__ring,
+  .focus-mode-active .focus-timer__ring {
+    width: 86px;
+    height: 86px;
+  }
+
+  .focus-mode .focus-timer__time,
+  .focus-mode-active .focus-timer__time {
+    font-size: 1.2rem;
+    font-weight: 700;
   }
 }
 
